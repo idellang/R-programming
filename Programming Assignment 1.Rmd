@@ -1,0 +1,108 @@
+---
+title: "Programming Assignment 1"
+author: "Me"
+date: "12/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+pollutant_mean = function(directory, pollutant, id = 1:332){
+  #read files in directory
+  files = paste(directory,'/' ,sprintf('%03d',id),'.csv', sep = '')
+  
+  #read files into dataframe
+  data = do.call(rbind,lapply(files,read.csv))
+  #return mean
+  return(mean(data[[pollutant]], na.rm = T))
+  }
+}
+
+pollutant_mean('specdata','sulfate', id = 1:10)
+pollutant_mean("specdata", "nitrate", 70:72)
+pollutant_mean("specdata", "nitrate", 23)
+```
+
+```{r}
+library(tidyverse)
+complete = function(directory, id = 1:332){
+   #read files in directory
+  files = paste(directory,'/' ,sprintf('%03d',id),'.csv', sep = '')
+  
+  #read files into dataframe
+  data = do.call(rbind,lapply(files,read.csv))
+  
+  #get only those that are complete cases
+  data = data[complete.cases(data),]
+  
+  #group by ID and get the number of rows
+  complete = data %>% 
+    group_by(ID) %>%
+    summarise(n = n()) %>%
+    ungroup()
+  return(complete)
+}
+
+complete("specdata", c(2, 4, 8, 10, 12))
+complete("specdata", 30:25)
+complete("specdata", 3)
+```
+
+```{r}
+corr = function(directory, threshold = 0){
+   
+  #read files in directory
+  setwd(directory)
+  files = list.files(pattern="*.csv")
+  
+  
+   #read files into dataframe
+  data = do.call(rbind,lapply(files,read.csv))
+  
+  #get only those that are complete cases
+  data = data[complete.cases(data),]
+  
+  complete = data %>%
+    group_by(ID) %>% ##groupby ID
+    mutate(n = n())%>% ##get number of rows
+    filter(n > threshold) %>% ##get only those with higher rows
+    summarise(corr = cor(x = sulfate, y = nitrate)) %>% #compute for correlation 
+    ungroup() %>%
+    .$corr
+  
+  complete
+}
+
+cr <- corr("specdata", 150)
+head(cr)
+summary(cr)
+
+cr <- corr("specdata", 400)
+head(cr)
+summary(cr)
+
+cr <- corr("specdata", 5000)
+summary(cr)
+length(cr)
+
+cr <- corr("specdata")
+summary(cr)
+length(cr)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

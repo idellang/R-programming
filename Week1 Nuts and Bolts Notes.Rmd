@@ -1,0 +1,184 @@
+---
+title: "Week 1 - Getting Started"
+author: "Me"
+date: "11/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Missing values
+```{r}
+x = c(1,2,NA, 10, 3)
+is.na(x)
+is.nan(x)
+```
+```{r}
+x = c(1,2,NaN, NA, 4)
+is.na(x)
+is.nan(x)
+```
+ 
+```{r}
+x = data.frame(foo = 1:4, bar = c(T,T,F,F))
+x
+nrow(x)
+ncol(x)
+colnames(x)
+rownames(x)
+```
+
+Names
+```{r}
+x = 1:3
+names(x) = c('foo','bar','norf')
+x
+names(x)
+```
+List can also have names
+```{r}
+x = list(a = 1, b = 2,c=3)
+names(x)
+```
+Matrices names are dimnames
+```{r}
+m = matrix(1:4, nrow= 2, ncol = 2)
+dimnames(m) = list(c('a','b'),c('c','d'))
+m
+```
+
+```{r}
+x = list(foo = 1:4, bar = .6)
+x[['foo']]
+```
+Nested list
+```{r}
+x = list(a = list(10,12,14), b = c(3.14, 2.81))
+x[[1]][[3]]
+x[[c(1,3)]]
+```
+
+Subsetting matrix
+```{r}
+x = matrix(1:6, 2,3)
+x
+x[1,2] #returns a value
+x[1,2, drop = F] ##returns a matrix
+```
+
+Partial matching
+```{r}
+x = list(aardvark = 1:5)
+x$a
+x[['a', exact = F]]
+```
+
+Subsetting and removing NA values
+
+```{r}
+x = c(1,2,NA,4,NA,5)
+bad = is.na(x)
+x[!bad]
+```
+
+```{r}
+x = c(1,2,NA,4,NA,5)
+y = c('a','b',NA,'d','f',NA)
+good = complete.cases(x,y)
+x[good]
+y[good]
+```
+
+```{r}
+good = complete.cases(airquality)
+airquality[good,]
+```
+
+Vectorized operations
+```{r}
+x = 1:4
+y = 6:9
+x+y
+x > 2
+```
+```{r}
+x = matrix(1:4,2,2)
+y = matrix(rep(10,4),2,2)
+x*y
+```
+True matrix multiplication
+```{r}
+x %*% y
+```
+
+```{r}
+x = 4L
+class(x)
+```
+
+```{r}
+x = c(4, T)
+x
+class(x)
+```
+```{r}
+x <- c(1,3, 5)
+y <- c(3, 2, 10)
+cbind(x,y)
+```
+
+```{r}
+x = list(2, 'a','b', T)
+x[[2]]
+```
+```{r}
+x = 1:4
+y = 2
+z = x+y
+z
+class(z)
+```
+
+```{r}
+ x <- c(17, 14, 4, 5, 13, 12, 10)
+x[x>=11] = 4
+x
+```
+
+```{r}
+library(tidyverse)
+data = read.csv('hw1_data.csv')
+colnames(data)
+data[1:2,]
+nrow(data)
+data[152:153,]
+data[47, 'Ozone']
+data %>%
+  filter(is.na(Ozone))
+
+mean(data$Ozone, na.rm = T)
+
+data %>%
+  filter(Ozone >31, Temp> 90) %>%
+  summarise(mean_solar = mean(Solar.R))
+
+data %>%
+  filter(Month == 6) %>%
+  summarise(mean(Temp, na.rm = T))
+ 
+data %>%
+  filter(Month == 5) %>%
+  summarise(max(Ozone, na.rm = T))
+```
+
+
+
+
+
+
+
+
+
+
