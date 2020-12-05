@@ -41,7 +41,7 @@ complete = function(directory, id = 1:332){
   #group by ID and get the number of rows
   complete = data %>% 
     group_by(ID) %>%
-    summarise(n = n()) %>%
+    summarise(nobs = n(), .groups =  'drop') %>%
     ungroup()
   return(complete)
 }
@@ -69,7 +69,7 @@ corr = function(directory, threshold = 0){
     group_by(ID) %>% ##groupby ID
     mutate(n = n())%>% ##get number of rows
     filter(n > threshold) %>% ##get only those with higher rows
-    summarise(corr = cor(x = sulfate, y = nitrate)) %>% #compute for correlation 
+    summarise(corr = cor(x = sulfate, y = nitrate), .groups = 'drop') %>% #compute for correlation 
     ungroup() %>%
     .$corr
   
@@ -92,11 +92,6 @@ cr <- corr("specdata")
 summary(cr)
 length(cr)
 ```
-
-
-
-
-
 
 
 

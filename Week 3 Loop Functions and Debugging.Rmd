@@ -1,0 +1,316 @@
+---
+title: "Week 3 - Looping functions and debugging"
+author: "Me"
+date: "12/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+lapply - over a list and evaluate functions
+sapply - same as lapply but simplify the result
+apply - apply a function over margins of array
+tapply - apply a function over subsets of vector
+mapply - multivariate version of lapply
+
+split is conjuction with lapply
+
+```{r}
+lapply
+```
+
+lapply always returns a list, regardless of the input
+```{r}
+library(purrr)
+x = list(a = 1:5, b = rnorm(10))
+y = data.frame(a = 1:5, b = rnorm(10))
+lapply(y, mean)
+map_df(y, mean)
+```
+
+```{r}
+x = list(a = 1:4, b = rnorm(10), c = rnorm(20,1),  d= rnorm(100,5))
+lapply(x, mean)
+```
+
+```{r}
+x = 1:4
+lapply(x, runif)
+```
+
+```{r}
+x = 1:4
+lapply(x, runif, min = 0, max = 10)
+```
+
+Lapply and friends makes heavy use of anonymous functions
+```{r}
+x = list(a = matrix(1:4,2,2), b = matrix(1:6, 3,2))
+lapply(x, function(elt) elt[,1])
+```
+Sapply will try to simplify results of lapply
+- if result is a list where every element is length 1 then a vector is returned
+- if result is a list where every element is a vector of same length, a matrix is returend
+- if cant figure out, a list is returned
+
+
+Apply
+- evaluate a function over margins of array
+
+```{r}
+str(apply)
+```
+x - array
+margin - integer vector indicating which margins shoould be retained
+FUN - functions
+... - other arguments
+
+```{r}
+x = matrix(rnorm(200), 20 , 10)
+apply(x, 2, mean) #col
+apply(x,1, mean) #row
+```
+
+For simple functions you can use 
+rowSums
+rowMeans,
+colSums
+colMeans
+
+```{r}
+colMeans(x)
+colMeans(as.data.frame(x))
+```
+Other ways to use apply
+Quantiles of the rows of matrix
+```{r}
+x = matrix(rnorm(200), 20, 10)
+apply(x, 1, quantile, probs = c(.25, .75))
+```
+
+Average matrix in an array
+
+this will collapse the 3rd dimension and keep 1 and 2
+```{r}
+a = array(rnorm(2 * 2 * 10), c(2,2,10))
+apply(a, c(1,2), mean)
+rowMeans(a, dims = 2)
+```
+Mapply - applies a function in parallel over set of arguments
+```{r}
+str(mapply)
+```
+FUN - function to apply
+... functions to apply over
+MoreArgs = list of other arguments to fun
+Simplify = whether the results should be simplified
+
+
+```{r}
+list(rep(1,4), rep(2,3), rep(3,2), rep(4,1))
+mapply(rep, 1:4, 4:1)
+```
+```{r}
+noise = function(n, mean, sd){
+  rnorm(n, mean, sd)
+}
+
+noise(5,1,2)
+noise(1:5, 1:5, 2)
+```
+
+```{r}
+list(noise(1,1,2), noise(2,2,2), noise(3,3,2), noise(4,4,2), noise(5,5,2))
+```
+
+tapply - used to apply over a subset of vector
+```{r}
+str(tapply)
+```
+X - vector
+INDEX - a factor or list of factors 
+FUN - function to be applied
+... other arguments
+simplify - should we simplify?
+
+```{r}
+x = c(rnorm(10), runif(10), rnorm(10,1))
+f = gl(3,10)
+tapply(x, f, mean)
+```
+If you dont simplify you get a 
+```{r}
+tapply(x, f, mean, simplify = F)
+```
+```{r}
+str(split)
+```
+
+x - vector or list
+f - factor or list of factors
+drop = indicates whether empty factors should be dropped
+
+```{r}
+x = c(rnorm(10), runif(10), rnorm(10,1))
+f = gl(3,10)
+split(x, f)
+```
+
+```{r}
+lapply(split(x,f), mean)
+```
+
+```{r}
+library(datasets)
+head(airquality)
+```
+
+```{r}
+sapply(split(airquality$Ozone, airquality$Month), mean, na.rm = T)
+```
+```{r}
+s = split(airquality, airquality$Month)
+sapply(s, function(x) colMeans(x[,c('Ozone','Solar.R','Wind')], na.rm = T))
+```
+
+Splitting on more than 1 level
+```{r}
+x = rnorm(10)
+f1 = gl(2,5)
+f2 = gl(5,2)
+f1
+f2
+
+interaction(f1,f2)
+```
+```{r}
+str(split(x, list(f1,f2), drop = T))
+```
+
+Debugging
+
+Basic warning
+```{r}
+log(-1)
+```
+
+Something is wrong
+```{r}
+printmessage = function(x){
+  if (x > 0){
+    print('x is greater than zero')
+  }
+  else{
+    print('x is less than or equal to zero')
+  }
+  invisible(x)
+}
+
+printmessage(1)
+printmessage(NA)
+```
+```{r}
+printmessage2 = function(x){
+  if(is.na(x)){
+    print('x is a missing value')
+  }
+  else if (x > 0){
+    print('x is greater than zero')
+  }
+  else{
+    print('x is less than or equal to zero')
+  }
+}
+
+x = log(-1)
+printmessage2(x)
+```
+
+Traceback - where in the series of function the error occured
+debug - give a function as argument and flags a function for debug mode
+browser - allows to browser call anywhere in the code.
+trace - insert debugging code in the function.
+recover - error handler function. rather than getting the console back, the R interpreter will stop execution of that function.
+
+```{r}
+mean(x)
+traceback()
+```
+Will give you most recent error.
+
+```{r}
+lm(y ~ x)
+traceback()
+```
+```{r}
+debug(lm)
+lm(y~x)
+```
+
+recover
+```{r}
+options(error = recover) #set global option
+read.csv('nosuchfile')
+```
+
+
+##quiz
+
+```{r}
+library(datasets)
+library(data.table)
+data(iris)
+?iris
+iris = as.data.table(iris)
+class(iris)
+```
+
+
+```{r}
+iris[Species == 'virginica', .(round(mean(Sepal.Length)))]
+```
+
+```{r}
+apply(iris[,1:4], 2, mean)
+```
+
+```{r}
+data("mtcars")
+```
+
+Calculate average mpg by number of cylinders
+```{r}
+tapply(mtcars$mpg, mtcars$cyl,mean) #correct
+split(mtcars, mtcars$cyl) #incorrect
+apply(mtcars, 2, mean) #incorrect
+tapply(mtcars$cyl, mtcars$mpg, mean) #incorrect
+sapply(split(mtcars$mpg, mtcars$cyl), mean) #correct
+mean(mtcars$mpg, mtcars$cyl)#
+lapply(mtcars, mean)
+with(mtcars, tapply(mpg, cyl, mean))
+```
+
+```{r}
+mtcars_dt = as.data.table(mtcars)
+cyl_means = mtcars_dt[, .(mean_cols = mean(hp)), by = cyl]
+round(abs(cyl_means[cyl == 4, mean_cols] - cyl_means[cyl == 8, mean_cols]))
+```
+```{r}
+debug(ls)
+ls()
+```
+
+
+
+
+
+
+
+
+
+
+
+
