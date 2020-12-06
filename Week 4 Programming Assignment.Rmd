@@ -1,0 +1,208 @@
+---
+title: "R programming Assignment 3"
+author: "Me"
+date: "12/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#1 Plot the 30 day mortality rate. 
+```{r}
+library(tidyverse)
+outcome = read.csv('outcome-of-care-measures.csv', colClasses = 'character')
+dim(outcome)
+head(outcome)
+names(outcome) %>%
+  head()
+```
+
+To make a simple histogram of the 30 day death rates from heart attack (column 11) run
+```{r}
+outcome[,11] = as.numeric(outcome[,11])
+hist(outcome[,11])
+```
+
+#2 Finding best hospital in the state.
+best takes two argument, abbreviated name and outcome name and returns the hospital that has the best lowest 30 day mortality for specified outcome. 
+
+```{r}
+best = function(state, outcome){
+  #read outcome data
+  outcome_data = fread('outcome-of-care-measures.csv')
+  
+  #check that the outcomes and state are valid
+  state_select = state
+  
+  if(!state %in% (outcome_data %>% distinct(State) %>% .$State)) stop('Invalid State')
+  if(!outcome %in% c('heart attack','heart failure','pneumonia')) stop('Invalid Outcome')
+  
+  #clean the name
+  outcome = janitor::make_clean_names(outcome)
+  
+  #clean col names
+  outcome_data = janitor::clean_names(outcome_data)
+  
+  #get selected state
+  outcome_data = outcome_data[state == state_select]
+  
+  #select only the needed column
+  outcome_data = outcome_data %>%
+    select(state, hospital_name, paste0('hospital_30_day_death_mortality_rates_from_',outcome)) %>%
+    filter(complete.cases(.))
+  
+  #convert to numeric
+  outcome_data[,3]=  as.numeric(unlist(outcome_data[,3]))
+  outcome_data[order(outcome_data[,3]), 'hospital_name'][1]
+}
+
+best('NY','hert attack')
+```
+
+#Ranking hospitals by outcome.
+
+Three arguments state, outcome, and ranking.
+Would return a character vector containing name of hospital with the nth lowest death rate. can take argument as best or worst. 
+If n > number of hospitals should return NA
+
+```{r}
+rankhospital = function(state, outcome, num = 'best'){
+  #read outcome data
+  outcome_data = fread('outcome-of-care-measures.csv')
+  
+  #check that the outcomes and state are valid
+  state_select = state
+  
+  if(!state %in% (outcome_data %>% distinct(State) %>% .$State)) stop('Invalid State')
+  if(!outcome %in% c('heart attack','heart failure','pneumonia')) stop('Invalid Outcome')
+  
+  #clean the name
+  outcome = janitor::make_clean_names(outcome)
+  
+  #clean col names
+  outcome_data = janitor::clean_names(outcome_data)
+  
+  #get selected state
+  outcome_data = outcome_data[state == state_select]
+  
+  #select only the needed column
+  outcome_data = outcome_data %>%
+    select(state, hospital_name, paste0('hospital_30_day_death_mortality_rates_from_',outcome))
+  
+  #convert to double
+  outcome_data[,3]=  as.numeric(unlist(outcome_data[,3]))
+  
+  #order based from mortality rates
+  #and create ranking
+  
+  outcome_data = outcome_data[complete.cases(outcome_data),]
+  outcome_data = outcome_data %>%
+    mutate(ranking = rank(outcome_data[,3], ties.method = 'last'))
+  
+  #order per rank 
+  outcome_data = outcome_data[order(outcome_data[,4]),]
+  
+  #return values
+  if (num == "best"){
+    return(outcome_data[1,'hospital_name'])
+  }
+  
+  if (num == "worst"){
+    return(outcome_data[nrow(outcome_data),'hospital_name'])
+  }
+  
+  return(outcome_data[num,'hospital_name'])
+  
+}
+
+rankhospital('MD','heart attack','worst')
+rankhospital('MN','heart attack',5000)
+rankhospital('TX','heart failure', 4)
+```
+
+
+# Rank all
+
+Check the rank and get from all states
+
+```{r}
+rankall = function(outcome, num = 'best'){
+  #read outcome data
+  outcome_data = fread('outcome-of-care-measures.csv')
+  
+  #check that the outcome is valid
+  
+  if(!outcome %in% c('heart attack','heart failure','pneumonia')) stop('Invalid Outcome')
+  
+  #clean the name
+  outcome = janitor::make_clean_names(outcome)
+  
+  #clean col names
+  outcome_data = janitor::clean_names(outcome_data)
+  
+  
+  #select only the needed column
+  outcome_data = outcome_data %>%
+    select(state, hospital_name, paste0('hospital_30_day_death_mortality_rates_from_',outcome))
+  
+  #convert to double
+  outcome_data[,3]=  as.numeric(unlist(outcome_data[,3]))
+  col_name = names(outcome_data[,3])
+  
+  outcome_data = outcome_data %>%
+    filter(complete.cases(.)) %>%
+    arrange(hospital_name) %>%
+    group_by(state) %>%
+    mutate(ranking = rank(get(col_name), ties.method = 'first')) %>%
+    arrange(state, ranking, hospital_name)
+  
+  all_states = outcome_data %>% distinct(state)
+  
+  #get ranking = 1
+  if(num == 'best'){
+      output = outcome_data %>%
+      filter(ranking == 1)
+    
+      output = all_states %>%
+        left_join(output)
+      
+    return(output)
+  }
+  
+  #get the last row
+  if(num == 'worst'){
+    output = outcome_data %>%
+      group_by(state) %>%
+      arrange(get(col_name)) %>%
+      slice(n())
+    
+    output = all_states %>%
+        left_join(output)
+    
+    return(output)
+  }
+  
+  #get ranking == num
+  else{
+  
+  output = outcome_data %>%
+      filter(ranking == num)
+    
+      output = all_states %>%
+        left_join(output)
+    
+    return(output)
+  
+  }
+}
+
+
+```
+
+
+
+
+

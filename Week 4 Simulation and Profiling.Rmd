@@ -1,0 +1,148 @@
+---
+title: "Week 4 Simulation and Profiling"
+author: "Me"
+date: "12/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+str(str)
+```
+```{r}
+str(lm)
+```
+```{r}
+x = rnorm(100, 2, 4)
+summary(x)
+str(x)
+```
+
+```{r}
+f = gl(40,10)
+str(f)
+```
+
+Simulation
+
+rnorm = random normal variates with given mean and sd
+dnorm = normal probability density at a point or vector points
+pnorm = evaluate cumulative distribution function for a normal distribution
+rpois = generate poisson variates
+
+d - density
+r - random number generation
+p - cumulative distribution
+q - quantile function
+
+```{r}
+x = rnorm(10)
+x = rnorm(10,20,2)
+summary(x)
+```
+
+Generating poisson data
+```{r}
+rpois(10,1)
+rpois(10,2)
+ppois(2,2)
+```
+Simulate from a linear model
+```{r}
+set.seed(20)
+x = rnorm(100)
+e = rnorm(100, 0, 2)
+
+y = .5 + 2*x + e
+
+summary(y)
+plot(x,y)
+```
+
+
+X is binary
+```{r}
+set.seed(10)
+x = rbinom(100,1 ,.5)
+e = rnorm(100,0 ,2)
+y = .5 + 2 * x + e
+plot(x,y)
+```
+
+Poisson distribution where Bo = .5 and B1 = .3
+```{r}
+set.seed(1)
+x = rnorm(100)
+log.mu = .5 + .3 *x
+y = rpois(100, exp(log.mu))
+plot(x,y)
+```
+
+Random sampling
+```{r}
+set.seed(1)
+sample(1:10, 4)
+
+sample(letters, 5)
+
+sample(1:10, replace = T)
+```
+Elapsed time > user time
+```{r}
+system.time(readLines("http://www.jhsph.edu"))
+```
+
+elapsed time < user time
+```{r}
+hilbert = function(n){
+  i <- 1:n
+  1 / outer(i - 1, i , '+')
+}
+
+x = hilbert(1000)
+system.time(svd(x))
+```
+
+Rprof() starts profiler in R
+summaryRprof() summarizes output from RProf()
+
+Do not use system.time or Rprof() together
+
+SummaryProf() tabulates R profiler output and calculates how much time is spend in each function
+Two methods for normalizing data
+- 'by.total' divides the time n each function over total run time
+- 'by.self' does same but first subtracts out time spent  in functions above the call stack
+
+Quiz
+
+```{r}
+set.seed(1)
+rpois(5, 2)
+```
+```{r}
+set.seed(10)
+x <- rep(0:1, each = 5)
+e <- rnorm(10, 0, 20)
+y <- 0.5 + 2 * x + e
+
+plot(x,y)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
